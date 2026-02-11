@@ -1,0 +1,119 @@
+# =============================================================================
+# Docker Compose - Sistema de Projetos de Redes Elétricas
+# =============================================================================
+# 
+# Este arquivo configura o ambiente de desenvolvimento com PostgreSQL + PostGIS.
+# 
+# COMO USAR:
+#   Subir os serviços:    docker-compose up -d
+#   Ver logs:             docker-compose logs -f
+#   Parar os serviços:    docker-compose down
+#   Remover tudo (dados): docker-compose down -v
+#
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL com PostGIS
+  # ---------------------------------------------------------------------------
+  # PostGIS é uma extensão do PostgreSQL que adiciona suporte a objetos 
+  # geográficos. Permite fazer consultas espaciais como:
+  # - Calcular distância entre pontos
+  # - Verificar se um ponto está dentro de um polígono
+  # - Encontrar objetos próximos a uma coordenada
+  # ---------------------------------------------------------------------------
+  postgres:
+    # Imagem oficial do PostGIS (PostgreSQL 15 + PostGIS 3.3)
+    image: postgis/postgis:15-3.3
+    # Emulação para Mac com Apple Silicon (M1/M2/M3)
+    platform: linux/amd64
+    
+    # Nome do container para facilitar identificação
+    container_name: rede-eletrica-db
+    
+    # Reiniciar automaticamente se o container cair
+    restart: unless-stopped
+    
+    # Variáveis de ambiente para configuração inicial
+    environment:
+      # Nome do banco de dados que será criado automaticamente
+      POSTGRES_DB: rede_eletrica
+      
+      # Usuário administrador do banco
+      POSTGRES_USER: dev
+      
+      # Senha do usuário (em produção, use secrets!)
+      POSTGRES_PASSWORD: dev123
+      
+      # Timezone do banco
+      TZ: America/Sao_Paulo
+    
+    # Mapeamento de portas: porta_host:porta_container
+    # Isso permite acessar o banco em localhost:5432
+    ports:
+      - "5432:5432"
+    
+    # Volume para persistir os dados do banco
+    # Sem isso, os dados seriam perdidos ao parar o container
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    
+    # Health check para garantir que o banco está pronto
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d rede_eletrica"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # pgAdmin (Opcional - Interface gráfica para o banco)
+  # ---------------------------------------------------------------------------
+  # Se você preferir usar o pgAdmin que já tem instalado, pode comentar
+  # este serviço inteiro.
+  # ---------------------------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    platform: linux/amd64
+    container_name: rede-eletrica-pgadmin
+    restart: unless-stopped
+    environment:
+      # Email para login no pgAdmin
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      
+      # Senha para login no pgAdmin
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      
+      # Desabilitar modo de configuração (mais rápido para iniciar)
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      # Acesse em http://localhost:5050
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+# -----------------------------------------------------------------------------
+# Volumes nomeados
+# -----------------------------------------------------------------------------
+# Volumes são usados para persistir dados fora do container.
+# Eles ficam armazenados em um local gerenciado pelo Docker.
+# -----------------------------------------------------------------------------
+volumes:
+  # Dados do PostgreSQL
+  pgdata:
+    name: rede-eletrica-pgdata
+  
+  # Configurações do pgAdmin
+  pgadmin_data:
+    name: rede-eletrica-pgadmin
+
+# -----------------------------------------------------------------------------
+# Networks (Redes)
+# -----------------------------------------------------------------------------
+# Por padrão, o Docker Compose cria uma rede para os serviços se comunicarem.
+# Não precisamos configurar nada adicional para este projeto.
+# -----------------------------------------------------------------------------

@@ -1,0 +1,46 @@
+# Dependências
+node_modules/
+.npm/
+
+# Build
+dist/
+build/
+
+# Ambiente
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dados locais
+*.hgt
+*.tif
+*.geotiff
+data/srtm/
+data/mapbiomas/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker volumes
+pgdata/
+
+# Arquivos gerados
+output/
+*.dxf
+
+# Claude Code
+.claude/
+
+# Resultados de teste
+backend/resultado.json
