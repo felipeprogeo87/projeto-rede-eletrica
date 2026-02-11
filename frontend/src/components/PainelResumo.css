@@ -1,0 +1,303 @@
+/* =============================================================================
+   Estilos: PainelResumo
+   Sidebar com estatísticas do projeto
+============================================================================= */
+
+.painel-resumo {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.painel-resumo.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* -----------------------------------------------------------------------------
+   Status do Projeto
+----------------------------------------------------------------------------- */
+
+.painel-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.painel-status.ok {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+}
+
+.painel-status.aviso {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+}
+
+.painel-status.erro {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+}
+
+.status-icon {
+  font-size: 20px;
+}
+
+/* -----------------------------------------------------------------------------
+   Seções
+----------------------------------------------------------------------------- */
+
+.painel-secao {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.painel-secao:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.painel-secao h3 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* -----------------------------------------------------------------------------
+   Grid de Estatísticas
+----------------------------------------------------------------------------- */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-valor {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.stat-valor.grande {
+  font-size: 28px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.stat-metodo {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.stat-metodo strong {
+  color: #3b82f6;
+}
+
+/* -----------------------------------------------------------------------------
+   Barreiras
+----------------------------------------------------------------------------- */
+
+.barreiras-lista {
+  display: flex;
+  gap: 12px;
+}
+
+.barreira-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 8px;
+}
+
+.barreira-item.critica {
+  background: #fef2f2;
+}
+
+.barreira-item.aviso {
+  background: #fffbeb;
+}
+
+.barreira-item.info {
+  background: #f8fafc;
+}
+
+.barreira-count {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.barreira-item.critica .barreira-count {
+  color: #dc2626;
+}
+
+.barreira-item.aviso .barreira-count {
+  color: #d97706;
+}
+
+.barreira-item.info .barreira-count {
+  color: #64748b;
+}
+
+.barreira-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+/* -----------------------------------------------------------------------------
+   Validação Detalhes
+----------------------------------------------------------------------------- */
+
+.validacao-detalhes {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.validacao-lista {
+  margin-bottom: 12px;
+}
+
+.validacao-lista h4 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.validacao-lista.erros h4 {
+  color: #dc2626;
+}
+
+.validacao-lista.avisos h4 {
+  color: #d97706;
+}
+
+.validacao-lista ul {
+  margin: 0;
+  padding: 0 0 0 16px;
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.validacao-lista li {
+  margin-bottom: 4px;
+}
+
+.validacao-lista li.mais {
+  color: #94a3b8;
+  font-style: italic;
+  list-style: none;
+  margin-left: -16px;
+  margin-top: 8px;
+}
+
+/* -----------------------------------------------------------------------------
+   Ações
+----------------------------------------------------------------------------- */
+
+.painel-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.btn-acao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-acao:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-acao.primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.btn-acao.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-acao.secondary {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.btn-acao.secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.btn-acao.success {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+}
+
+.btn-acao.success:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+/* -----------------------------------------------------------------------------
+   Responsivo
+----------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .painel-resumo {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .stat-valor.grande {
+    font-size: 24px;
+  }
+
+  .barreiras-lista {
+    gap: 8px;
+  }
+
+  .barreira-count {
+    font-size: 20px;
+  }
+}

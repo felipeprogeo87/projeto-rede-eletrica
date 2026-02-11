@@ -1,0 +1,155 @@
+/* =============================================================================
+   Estilos: PerfilAltimetrico
+   Design limpo para gráfico de elevação
+============================================================================= */
+
+.perfil-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.perfil-vazio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* -----------------------------------------------------------------------------
+   Header com Estatísticas
+----------------------------------------------------------------------------- */
+
+.perfil-header {
+  margin-bottom: 20px;
+}
+
+.perfil-header h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.perfil-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.perfil-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.perfil-stats .stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.perfil-stats .stat-valor {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.perfil-stats .stat-valor.alerta {
+  color: #dc2626;
+}
+
+/* -----------------------------------------------------------------------------
+   Gráfico
+----------------------------------------------------------------------------- */
+
+.perfil-grafico {
+  margin: 0 -10px;
+}
+
+/* -----------------------------------------------------------------------------
+   Tooltip Customizado
+----------------------------------------------------------------------------- */
+
+.perfil-tooltip {
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.perfil-tooltip .distancia {
+  margin: 0 0 4px 0;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.perfil-tooltip .elevacao {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.perfil-tooltip .valor {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.perfil-tooltip .unidade {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* -----------------------------------------------------------------------------
+   Legenda de Postes
+----------------------------------------------------------------------------- */
+
+.perfil-legenda-postes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.perfil-legenda-postes .legenda-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* -----------------------------------------------------------------------------
+   Responsivo
+----------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .perfil-container {
+    padding: 16px;
+  }
+
+  .perfil-stats {
+    gap: 12px;
+  }
+
+  .perfil-stats .stat-valor {
+    font-size: 16px;
+  }
+
+  .perfil-stats .stat-label {
+    font-size: 10px;
+  }
+}

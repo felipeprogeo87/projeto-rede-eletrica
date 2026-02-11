@@ -1,0 +1,180 @@
+/* =============================================================================
+   Estilos: ControleCamadas
+   Toggle para camadas do mapa
+============================================================================= */
+
+.controle-camadas {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.controle-camadas h4 {
+  margin: 0 0 14px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* -----------------------------------------------------------------------------
+   Grupos de Camadas
+----------------------------------------------------------------------------- */
+
+.camadas-grupo {
+  margin-bottom: 16px;
+}
+
+.camadas-grupo:last-of-type {
+  margin-bottom: 0;
+}
+
+.grupo-titulo {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* -----------------------------------------------------------------------------
+   Item de Camada
+----------------------------------------------------------------------------- */
+
+.camada-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.camada-item:hover {
+  background: #f8fafc;
+}
+
+.camada-item.ativo {
+  background: #f0f9ff;
+}
+
+.camada-item input[type="checkbox"] {
+  display: none;
+}
+
+/* Checkbox customizado */
+.camada-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.camada-item.ativo .camada-check {
+  background: white;
+}
+
+.check-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* Ícone da camada */
+.camada-icone {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Label */
+.camada-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.camada-item.ativo .camada-label {
+  color: #1e293b;
+}
+
+/* Contador */
+.camada-contador {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.camada-item.ativo .camada-contador {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+/* -----------------------------------------------------------------------------
+   Ações
+----------------------------------------------------------------------------- */
+
+.camadas-acoes {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-camadas {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-camadas:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+/* -----------------------------------------------------------------------------
+   Responsivo
+----------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .controle-camadas {
+    padding: 12px;
+  }
+
+  .camada-item {
+    padding: 6px 8px;
+    margin: 0 -8px;
+  }
+
+  .camada-label {
+    font-size: 12px;
+  }
+}

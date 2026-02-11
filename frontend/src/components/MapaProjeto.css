@@ -1,0 +1,291 @@
+/* =============================================================================
+   Estilos: MapaProjeto
+   Visual limpo e profissional para visualização de projetos elétricos
+============================================================================= */
+
+.mapa-projeto-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.mapa-container {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+}
+
+/* -----------------------------------------------------------------------------
+   Controles de Tipo de Mapa
+----------------------------------------------------------------------------- */
+
+.mapa-controles {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 100;
+}
+
+.mapa-tipo-toggle {
+  display: flex;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.mapa-tipo-toggle button {
+  padding: 8px 16px;
+  border: none;
+  background: white;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-right: 1px solid #e2e8f0;
+}
+
+.mapa-tipo-toggle button:last-child {
+  border-right: none;
+}
+
+.mapa-tipo-toggle button:hover {
+  background: #f8fafc;
+  color: #334155;
+}
+
+.mapa-tipo-toggle button.active {
+  background: #3b82f6;
+  color: white;
+}
+
+/* -----------------------------------------------------------------------------
+   Legenda
+----------------------------------------------------------------------------- */
+
+.mapa-legenda {
+  position: absolute;
+  bottom: 24px;
+  left: 16px;
+  z-index: 100;
+  background: white;
+  border-radius: 10px;
+  padding: 14px 18px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  min-width: 140px;
+}
+
+.mapa-legenda h4 {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.legenda-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.legenda-item:last-child {
+  margin-bottom: 0;
+}
+
+.legenda-cor {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.legenda-linha {
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.legenda-linha.mt {
+  background: #dc2626;
+}
+
+.legenda-linha.bt {
+  background: #2563eb;
+}
+
+.legenda-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 10px 0;
+}
+
+/* -----------------------------------------------------------------------------
+   InfoWindow Customizado - Poste
+----------------------------------------------------------------------------- */
+
+.info-poste {
+  padding: 4px;
+  min-width: 200px;
+}
+
+.info-poste h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.info-poste table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.info-poste td {
+  padding: 4px 0;
+  font-size: 13px;
+  color: #475569;
+}
+
+.info-poste td:first-child {
+  font-weight: 500;
+  color: #64748b;
+  width: 70px;
+}
+
+.info-poste td:last-child {
+  color: #1e293b;
+}
+
+.info-poste .badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+}
+
+/* -----------------------------------------------------------------------------
+   InfoWindow Customizado - Barreira
+----------------------------------------------------------------------------- */
+
+.info-barreira {
+  padding: 4px;
+  min-width: 180px;
+}
+
+.info-barreira h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.info-barreira p {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.info-barreira .severidade {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.info-barreira.critica .severidade {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.info-barreira.aviso .severidade {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.info-barreira.info .severidade {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+/* -----------------------------------------------------------------------------
+   InfoWindow Customizado - Condutor
+----------------------------------------------------------------------------- */
+
+.info-condutor {
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.info-condutor strong {
+  color: #dc2626;
+}
+
+/* -----------------------------------------------------------------------------
+   Google Maps Override - Remover bordas padrão
+----------------------------------------------------------------------------- */
+
+.gm-style .gm-style-iw-c {
+  padding: 12px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+.gm-style .gm-style-iw-d {
+  overflow: auto !important;
+}
+
+.gm-style .gm-style-iw-tc {
+  display: none;
+}
+
+.gm-style-iw-chr {
+  display: none;
+}
+
+/* -----------------------------------------------------------------------------
+   Responsivo
+----------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .mapa-legenda {
+    bottom: auto;
+    top: 70px;
+    left: 10px;
+    padding: 10px 14px;
+    min-width: 120px;
+  }
+
+  .mapa-legenda h4 {
+    font-size: 11px;
+  }
+
+  .legenda-item {
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .mapa-tipo-toggle button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
