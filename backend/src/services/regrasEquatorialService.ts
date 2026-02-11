@@ -695,6 +695,7 @@ export const regrasEquatorialService = {
       altura: number;
       resistencia: number;
       estrutura: string;
+      aterramento?: boolean;
     }>,
     condutores: Array<{
       id: string;
@@ -769,10 +770,22 @@ export const regrasEquatorialService = {
       }
     }
 
-    // Validar aterramento (verificar espaçamento)
+    // Validar aterramento (verificar espaçamento considerando postes aterrados)
+    const postesMap = new Map(postes.map(p => [p.id, p]));
     let distanciaAcumulada = 0;
-    for (const condutor of condutores) {
+    // Filtrar apenas condutores MT (evitar contar o mesmo trecho 2x com BT)
+    const condutoresMT = condutores.filter(c => c.id.startsWith('CMT'));
+    for (const condutor of condutoresMT) {
+      const posteDestino = postesMap.get(condutor.poste_destino_id);
+
       distanciaAcumulada += condutor.comprimento;
+
+      // Se o poste de destino tem aterramento, resetar o contador
+      if (posteDestino?.aterramento) {
+        distanciaAcumulada = 0;
+        continue;
+      }
+
       if (distanciaAcumulada > REGRAS_ATERRAMENTO.intervalo_maximo_bt) {
         avisos.push({
           campo: 'aterramento',

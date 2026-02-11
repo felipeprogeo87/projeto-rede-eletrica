@@ -396,18 +396,24 @@ export const geracaoService = {
       
       const temObstaculos = dadosTerreno.obstaculos.length > 0;
       const vaoIdeal = areaClassifierService.calcularVaoIdeal(tipoArea, tipoRede, temObstaculos, perfil.decliveMaximo);
-      
+
+      // Usar regrasEquatorialService como fonte única de verdade para vaoMaximo
+      // (considera BT conjugada, travessias, etc. — mesma regra usada na validação)
+      const vaoMaximoReal = regrasEquatorialService.obterVaoMaximo(configProjeto);
+      const vaoMinimoReal = regrasEquatorialService.obterVaoMinimo(configProjeto);
+      ws.log(osId, 'info', 'postes', `Vão máximo efetivo: ${vaoMaximoReal}m (regras Equatorial, BT=${configProjeto.comBT})`);
+
       let pontosPostes: PontoPoste[];
       let esquinasUtilizadas = 0;
       let travessiasDetectadas = 0;
-      
+
       const { resultado: resultadoInteligente, tempoMs: tempoPostes } = await medirTempo(async () => {
         return await roteamentoInteligenteService.analisarRota(
           rota,
           dadosTerreno,
-          vaoIdeal,
-          regrasVao.vaoMaximo,
-          regrasVao.vaoMinimo
+          Math.min(vaoIdeal, vaoMaximoReal),
+          vaoMaximoReal,
+          vaoMinimoReal
         );
       });
       
@@ -468,9 +474,9 @@ export const geracaoService = {
       });
 
       // Distribuir aterramento a cada ≤150m (máximo 200m sem aterramento — NT.00005)
-      const ATERRAMENTO_IDEAL = 150; // metros
+      // Considera postes que já têm aterramento (origem, destino, trafo, fim)
+      const ATERRAMENTO_IDEAL = 150; // metros — garante margem para o limite de 200m
       let distDesdeUltimoAterramento = 0;
-      let ultimoPosteComAterramento = 0;
 
       for (let i = 1; i < postes.length; i++) {
         const dist = calcularDistancia(
@@ -479,10 +485,16 @@ export const geracaoService = {
         );
         distDesdeUltimoAterramento += dist;
 
+        // Se o poste já tem aterramento (origem, destino, trafo, fim), resetar contador
+        if (postes[i].aterramento) {
+          distDesdeUltimoAterramento = 0;
+          continue;
+        }
+
+        // Se a distância acumulada atingiu o ideal, ativar aterramento neste poste
         if (distDesdeUltimoAterramento >= ATERRAMENTO_IDEAL) {
           postes[i].aterramento = true;
           distDesdeUltimoAterramento = 0;
-          ultimoPosteComAterramento = i;
         }
       }
 
@@ -491,9 +503,10 @@ export const geracaoService = {
       // =====================================================================
       ws.etapaInicio(osId, 'validacao', 'Validando projeto e detectando barreiras');
       
-      const postesParaBarreiras: PosteGerado[] = postes.map((p) => ({
+      const postesParaBarreiras: (PosteGerado & { aterramento?: boolean })[] = postes.map((p) => ({
         id: p.id, codigo: p.codigo, latitude: p.latitude, longitude: p.longitude,
         altura: p.altura, resistencia: p.resistencia, estrutura: p.estrutura, tipo: p.tipo,
+        aterramento: p.aterramento,
       }));
 
       ws.etapaProgresso(osId, 'validacao', 30, 'Detectando barreiras OSM...');

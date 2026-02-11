@@ -105,6 +105,7 @@ const MonitorGeracao: React.FC<MonitorGeracaoProps> = ({ osId, onComplete, onErr
   const [progressoGeral, setProgressoGeral] = useState(0);
   const [status, setStatus] = useState<'idle' | 'executando' | 'concluido' | 'erro'>('idle');
   const [tempoDecorrido, setTempoDecorrido] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_resultado, setResultado] = useState<any>(null);
   
   const logsRef = useRef<HTMLDivElement>(null);

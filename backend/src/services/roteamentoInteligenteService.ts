@@ -622,7 +622,16 @@ export const roteamentoInteligenteService = {
       }
     }
 
-    return postesFinais;
+    // 7. Remover postes duplicados (distância < 2m entre consecutivos)
+    const postesDedupados: PontoPoste[] = [postesFinais[0]];
+    for (let i = 1; i < postesFinais.length; i++) {
+      const dist = calcularDistancia(postesDedupados[postesDedupados.length - 1].coordenada, postesFinais[i].coordenada);
+      if (dist >= 2) {
+        postesDedupados.push(postesFinais[i]);
+      }
+    }
+
+    return postesDedupados;
   },
 
   /**
