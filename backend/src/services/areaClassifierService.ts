@@ -71,37 +71,45 @@ export interface RegrasCompletas {
 // Constantes - Regras NT EQTL
 // -----------------------------------------------------------------------------
 
+/**
+ * Regras de vãos por tipo de área e tipo de rede.
+ * Fonte: NT.00005.EQTL Tabela 6.2 — Vãos máximos
+ *
+ * IMPORTANTE: Para rede conjugada (MT+BT), o vão efetivo é decidido no
+ * regrasEquatorialService.obterVaoMaximo(), que é a fonte única de verdade.
+ * Esta tabela define os limites por tipo de rede INDIVIDUAL.
+ */
 const REGRAS_POR_AREA: Record<TipoArea, RegrasCompletas> = {
   URBANA: {
     tipoArea: 'URBANA',
     redesMT: {
       convencional: {
-        vaoMinimo: 35,
-        vaoMaximo: 80,
+        vaoMinimo: 30,
+        vaoMaximo: 80,       // NT.00005: 80m
         vaoIdeal: 50,
         alturaMinimaMT: 6.0,
         alturaMinimaBT: 5.5,
       },
       compacta: {
-        vaoMinimo: 30,
-        vaoMaximo: 60,
-        vaoIdeal: 45,
+        vaoMinimo: 25,
+        vaoMaximo: 40,       // NT.00005: 40m
+        vaoIdeal: 35,
         alturaMinimaMT: 5.5,
         alturaMinimaBT: 5.0,
       },
     },
     redesBT: {
       multiplexada: {
-        vaoMinimo: 25,
-        vaoMaximo: 45,
-        vaoIdeal: 35,
+        vaoMinimo: 20,
+        vaoMaximo: 35,       // NT.00005: 35m
+        vaoIdeal: 30,
         alturaMinimaMT: 0,
         alturaMinimaBT: 5.5,
       },
       convencional: {
-        vaoMinimo: 25,
-        vaoMaximo: 40,
-        vaoIdeal: 35,
+        vaoMinimo: 20,
+        vaoMaximo: 30,       // NT.00005: 30m
+        vaoIdeal: 25,
         alturaMinimaMT: 0,
         alturaMinimaBT: 6.0,
       },
@@ -111,32 +119,32 @@ const REGRAS_POR_AREA: Record<TipoArea, RegrasCompletas> = {
     tipoArea: 'RURAL',
     redesMT: {
       convencional: {
-        vaoMinimo: 60,
-        vaoMaximo: 120,
-        vaoIdeal: 90,
+        vaoMinimo: 40,
+        vaoMaximo: 150,      // NT.00005: 150m
+        vaoIdeal: 100,
         alturaMinimaMT: 6.0,
         alturaMinimaBT: 5.5,
       },
       compacta: {
-        vaoMinimo: 50,
-        vaoMaximo: 100,
-        vaoIdeal: 80,
+        vaoMinimo: 35,
+        vaoMaximo: 80,       // NT.00005: 80m
+        vaoIdeal: 60,
         alturaMinimaMT: 5.5,
         alturaMinimaBT: 5.0,
       },
     },
     redesBT: {
       multiplexada: {
-        vaoMinimo: 35,
-        vaoMaximo: 80,
-        vaoIdeal: 60,
+        vaoMinimo: 25,
+        vaoMaximo: 40,       // NT.00005: 40m
+        vaoIdeal: 35,
         alturaMinimaMT: 0,
         alturaMinimaBT: 5.5,
       },
       convencional: {
-        vaoMinimo: 40,
-        vaoMaximo: 80,
-        vaoIdeal: 60,
+        vaoMinimo: 25,
+        vaoMaximo: 35,       // NT.00005: 35m
+        vaoIdeal: 30,
         alturaMinimaMT: 0,
         alturaMinimaBT: 6.0,
       },
