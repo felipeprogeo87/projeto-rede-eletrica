@@ -582,6 +582,46 @@ export const roteamentoInteligenteService = {
       }
     }
     
+    // 6. Validação final: garantir que nenhum vão excede o máximo
+    //    (esquinas podem ter sido deslocadas, gerando vãos maiores que o esperado)
+    let precisaRevalidar = true;
+    let iteracoes = 0;
+    const MAX_ITERACOES = 10; // safety: evitar loop infinito
+
+    while (precisaRevalidar && iteracoes < MAX_ITERACOES) {
+      precisaRevalidar = false;
+      iteracoes++;
+      const postesExtras: { index: number; ponto: PontoPoste }[] = [];
+
+      for (let i = 0; i < postesFinais.length - 1; i++) {
+        const dist = calcularDistancia(postesFinais[i].coordenada, postesFinais[i + 1].coordenada);
+        if (dist > vaoMaximo) {
+          // Inserir poste intermediário no ponto médio ajustado à rota
+          const meio: Coordenada = {
+            lat: (postesFinais[i].coordenada.lat + postesFinais[i + 1].coordenada.lat) / 2,
+            lng: (postesFinais[i].coordenada.lng + postesFinais[i + 1].coordenada.lng) / 2,
+          };
+          const pontoAjustado = this.ajustarParaRua(meio, rota);
+
+          postesExtras.push({
+            index: i + 1,
+            ponto: {
+              coordenada: pontoAjustado,
+              tipo: 'INTERMEDIARIO',
+              prioridade: CONFIG.PRIORIDADE_INTERMEDIARIO,
+              justificativa: 'Poste intermediário para respeitar vão máximo',
+            },
+          });
+          precisaRevalidar = true;
+        }
+      }
+
+      // Inserir de trás para frente para manter índices corretos
+      for (let k = postesExtras.length - 1; k >= 0; k--) {
+        postesFinais.splice(postesExtras[k].index, 0, postesExtras[k].ponto);
+      }
+    }
+
     return postesFinais;
   },
 

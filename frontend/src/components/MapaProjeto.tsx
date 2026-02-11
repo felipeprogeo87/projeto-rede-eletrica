@@ -159,6 +159,7 @@ const MapaProjeto: React.FC<MapaProjetoProps> = ({
       markersRef.current.forEach(m => m.setMap(null));
       polylinesRef.current.forEach(p => p.setMap(null));
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiKey]);
 
   // ---------------------------------------------------------------------------
@@ -394,9 +395,9 @@ const MapaProjeto: React.FC<MapaProjetoProps> = ({
         });
 
         marker.addListener('click', () => {
-          const cor = CORES_BARREIRA[barreira.tipo] || '#6b7280';
+          const corBarreira = CORES_BARREIRA[barreira.tipo] || '#6b7280';
           const content = `
-            <div class="info-barreira ${barreira.severidade.toLowerCase()}">
+            <div class="info-barreira ${barreira.severidade.toLowerCase()}" style="border-left: 4px solid ${corBarreira}">
               <h3>${ICONES_BARREIRA[barreira.tipo]} ${barreira.tipo.replace(/_/g, ' ')}</h3>
               <p>${barreira.descricao}</p>
               <span class="severidade">${barreira.severidade}</span>

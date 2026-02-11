@@ -467,6 +467,25 @@ export const geracaoService = {
         };
       });
 
+      // Distribuir aterramento a cada ≤150m (máximo 200m sem aterramento — NT.00005)
+      const ATERRAMENTO_IDEAL = 150; // metros
+      let distDesdeUltimoAterramento = 0;
+      let ultimoPosteComAterramento = 0;
+
+      for (let i = 1; i < postes.length; i++) {
+        const dist = calcularDistancia(
+          { lat: postes[i - 1].latitude, lng: postes[i - 1].longitude },
+          { lat: postes[i].latitude, lng: postes[i].longitude }
+        );
+        distDesdeUltimoAterramento += dist;
+
+        if (distDesdeUltimoAterramento >= ATERRAMENTO_IDEAL) {
+          postes[i].aterramento = true;
+          distDesdeUltimoAterramento = 0;
+          ultimoPosteComAterramento = i;
+        }
+      }
+
       // =====================================================================
       // ETAPA 9: Validação e detecção de barreiras
       // =====================================================================
