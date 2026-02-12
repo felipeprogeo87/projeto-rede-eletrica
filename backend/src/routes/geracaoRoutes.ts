@@ -38,7 +38,11 @@ router.post('/:osId/gerar-projeto', async (req: Request, res: Response) => {
     res.json(resultado);
   } catch (error: any) {
     console.error(`[GERACAO] Erro:`, error.message);
-    res.status(500).json({ error: error.message });
+    if (error.message === 'Ordem de serviço não encontrada') {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   } finally {
     geracaoEmAndamento.delete(osId);
   }

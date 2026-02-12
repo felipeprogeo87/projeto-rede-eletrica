@@ -1,15 +1,25 @@
 /* =============================================================================
    Estilos: VisualizarProjetoPage
-   Layout completo com mapa, perfil e painéis
+   Layout unificado: header + mapa + conteudo condicional abaixo
 ============================================================================= */
 
 /* -----------------------------------------------------------------------------
-   Estados de Loading/Erro
+   Base / Pagina
+----------------------------------------------------------------------------- */
+
+.visualizar-page {
+  min-height: 100vh;
+  background: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -----------------------------------------------------------------------------
+   Estados de Loading/Erro (early returns)
 ----------------------------------------------------------------------------- */
 
 .visualizar-page.loading-state,
-.visualizar-page.erro-state,
-.visualizar-page.inicial-state {
+.visualizar-page.erro-state {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -58,95 +68,9 @@
 }
 
 /* -----------------------------------------------------------------------------
-   Estado Inicial (sem projeto)
+   Header — sempre visivel
 ----------------------------------------------------------------------------- */
 
-.inicial-card {
-  background: white;
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  max-width: 400px;
-}
-
-.inicial-card h1 {
-  margin: 0 0 24px 0;
-  font-size: 28px;
-  color: #1e293b;
-}
-
-.os-info {
-  background: #f8fafc;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 24px;
-  text-align: left;
-}
-
-.os-info p {
-  margin: 4px 0;
-  font-size: 14px;
-  color: #475569;
-}
-
-.btn-gerar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 16px 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-gerar:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
-}
-
-.btn-gerar:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.btn-gerar .spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.erro-msg {
-  margin-top: 16px;
-  padding: 12px;
-  background: #fef2f2;
-  border-radius: 8px;
-  color: #dc2626;
-  font-size: 14px;
-}
-
-/* -----------------------------------------------------------------------------
-   Layout Principal
------------------------------------------------------------------------------ */
-
-.visualizar-page {
-  min-height: 100vh;
-  background: #f1f5f9;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header */
 .visualizar-header {
   background: white;
   padding: 12px 24px;
@@ -190,6 +114,54 @@
   color: #64748b;
 }
 
+.header-acoes {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Botao "Gerar Projeto" no header */
+.btn-gerar-header {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-gerar-header:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Botao "Gerando..." no header */
+.btn-gerando {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+/* Botao "Regerar" */
 .btn-regerar {
   padding: 8px 16px;
   background: #f1f5f9;
@@ -210,30 +182,16 @@
   opacity: 0.5;
 }
 
-/* Layout grid */
-.visualizar-layout {
-  display: grid;
-  grid-template-columns: 240px 1fr 320px;
-  gap: 16px;
-  padding: 16px;
-  flex: 1;
-  min-height: 0;
-}
+/* -----------------------------------------------------------------------------
+   Mapa — sempre visivel (area principal)
+----------------------------------------------------------------------------- */
 
-/* Sidebars */
-.sidebar-esquerda,
-.sidebar-direita {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
-}
-
-/* Área do mapa */
-.area-mapa {
+.area-mapa-principal {
+  height: 450px;
+  margin: 16px 16px 0;
   border-radius: 12px;
   overflow: hidden;
-  min-height: 400px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .mapa-placeholder {
@@ -258,9 +216,339 @@
   font-size: 12px;
 }
 
-/* Área do perfil */
+/* -----------------------------------------------------------------------------
+   Banner de Erro (nao-fatal)
+----------------------------------------------------------------------------- */
+
+.erro-banner {
+  margin: 12px 16px 0;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.erro-banner button {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 4px 8px;
+}
+
+/* -----------------------------------------------------------------------------
+   Painel de Configuracao (estado "pronto")
+----------------------------------------------------------------------------- */
+
+.config-panel {
+  padding: 16px;
+}
+
+.config-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.config-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.config-field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.config-field select {
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.config-field select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.config-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+}
+
+.config-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.config-checkboxes input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+}
+
+/* Botao "Gerar Projeto" no painel de config */
+.btn-gerar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-gerar:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+}
+
+.btn-gerar:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* -----------------------------------------------------------------------------
+   Painel de Progresso (estado "gerando")
+----------------------------------------------------------------------------- */
+
+.progress-panel {
+  margin: 16px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.progress-bar-container {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.progress-bar-animated {
+  height: 100%;
+  width: 30%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa, #3b82f6);
+  background-size: 200% 100%;
+  border-radius: 3px;
+  animation: progress-slide 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-slide {
+  0% { margin-left: 0; width: 30%; }
+  50% { margin-left: 35%; width: 40%; }
+  100% { margin-left: 70%; width: 30%; }
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+}
+
+.progress-etapas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* -----------------------------------------------------------------------------
+   Resumo Rapido (estado "resultado" — barra de stats)
+----------------------------------------------------------------------------- */
+
+.resultado-resumo-rapido {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.resultado-resumo-rapido .resumo-item {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.resultado-resumo-rapido .resumo-valor {
+  font-size: 22px;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.resultado-resumo-rapido .resumo-valor.erro {
+  color: #dc2626;
+}
+
+.resultado-resumo-rapido .resumo-valor.ok {
+  color: #22c55e;
+}
+
+.resultado-resumo-rapido .resumo-label {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* -----------------------------------------------------------------------------
+   Layout Resultado (sidebars)
+----------------------------------------------------------------------------- */
+
+.resultado-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.sidebar-esquerda,
+.sidebar-direita {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* -----------------------------------------------------------------------------
+   Perfil Altimetrico
+----------------------------------------------------------------------------- */
+
 .area-perfil {
   padding: 0 16px 16px;
+}
+
+/* -----------------------------------------------------------------------------
+   Painel de Validacao
+----------------------------------------------------------------------------- */
+
+.validacao-panel {
+  margin: 0 16px 16px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.validacao-panel h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.validacao-erros {
+  margin-bottom: 16px;
+}
+
+.validacao-erros h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.validacao-erros ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.validacao-erros li {
+  padding: 8px 12px;
+  background: #fef2f2;
+  border-left: 3px solid #dc2626;
+  margin-bottom: 4px;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: #991b1b;
+}
+
+.validacao-avisos h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #d97706;
+}
+
+.validacao-avisos ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.validacao-avisos li {
+  padding: 8px 12px;
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  margin-bottom: 4px;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.validacao-avisos .mais-itens {
+  background: #f8fafc;
+  border-left-color: #94a3b8;
+  color: #64748b;
+  font-style: italic;
 }
 
 /* -----------------------------------------------------------------------------
@@ -315,31 +603,23 @@
    Responsivo
 ----------------------------------------------------------------------------- */
 
-@media (max-width: 1200px) {
-  .visualizar-layout {
-    grid-template-columns: 200px 1fr 280px;
-  }
-}
-
 @media (max-width: 992px) {
-  .visualizar-layout {
+  .resultado-layout {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
   }
 
-  .sidebar-esquerda {
-    order: 1;
-    flex-direction: row;
-    overflow-x: auto;
+  .area-mapa-principal {
+    height: 350px;
+    margin: 12px 12px 0;
   }
 
-  .area-mapa {
-    order: 2;
-    min-height: 350px;
+  .resultado-resumo-rapido {
+    padding: 12px;
+    gap: 8px;
   }
 
-  .sidebar-direita {
-    order: 3;
+  .resultado-resumo-rapido .resumo-item {
+    min-width: 80px;
   }
 }
 
@@ -355,16 +635,29 @@
     flex-wrap: wrap;
   }
 
-  .visualizar-layout {
-    padding: 12px;
-    gap: 12px;
+  .area-mapa-principal {
+    height: 300px;
+    margin: 8px 8px 0;
+    border-radius: 8px;
   }
 
-  .area-mapa {
-    min-height: 300px;
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .config-checkboxes {
+    flex-direction: column;
   }
 
   .area-perfil {
     padding: 0 12px 12px;
+  }
+
+  .resultado-resumo-rapido .resumo-valor {
+    font-size: 18px;
+  }
+
+  .resultado-resumo-rapido .resumo-label {
+    font-size: 10px;
   }
 }

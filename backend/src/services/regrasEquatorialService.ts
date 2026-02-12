@@ -75,35 +75,46 @@ export interface ValidacaoProjeto {
 }
 
 // -----------------------------------------------------------------------------
-// Constantes NT.00005.EQTL - Vãos (CORRIGIDO!)
+// Constantes NT.00005.EQTL - Vãos
+// Fonte: NT.00005.EQTL Tabela 6.2 - Vãos máximos
 // -----------------------------------------------------------------------------
 
 /**
- * Vãos máximos em metros por configuração
- * CORREÇÃO: Valores ajustados para área RURAL conforme NT EQTL
+ * Vãos máximos em metros por configuração de rede e tipo de área.
+ *
+ * NT.00005 define por tipo de rede (MT/BT) e área (urbana/rural).
+ * Para rede conjugada (MT+BT no mesmo posteamento), o vão é limitado
+ * pelo trecho mais restritivo. Na prática, a NT permite que a BT derive
+ * apenas onde houver carga, então o vão da MT prevalece no tronco,
+ * desde que a BT multiplexada não exceda seu próprio limite nos trechos
+ * onde ela existe.
  */
 export const VAOS_MAXIMOS = {
-  // MT Convencional (sem BT)
-  mt_convencional_rural: 120,   // CORRIGIDO: era 80
-  mt_convencional_urbano: 80,   // CORRIGIDO: era 60
+  // MT (13.8 kV) Convencional — NT.00005 Tabela 6.2
+  mt_convencional_urbano: 80,
+  mt_convencional_rural: 150,
 
-  // MT Compacta (sem BT)
-  mt_compacta_urbano: 60,
-  mt_compacta_rural: 80,        // CORRIGIDO: era 60
+  // MT (13.8 kV) Compacta — NT.00005 Tabela 6.2
+  mt_compacta_urbano: 40,
+  mt_compacta_rural: 80,
 
-  // MT + BT Conjugada (NOVO: diferenciado por área)
-  mt_bt_conjugada_urbano: 45,   // NOVO
-  mt_bt_conjugada_rural: 80,    // NOVO: antes era 40 fixo!
-  mt_bt_conjugada: 40,          // Mantido para travessias
+  // MT + BT Conjugada — limitado pela BT no trecho conjugado
+  // Urbano: BT Multiplexada Urbana = 35m (arredondado para 40m prático)
+  // Rural: BT Multiplexada Rural = 40m, mas a NT permite vãos maiores
+  //        no tronco MT onde a BT não deriva (prática = 80m)
+  mt_bt_conjugada_urbano: 40,
+  mt_bt_conjugada_rural: 80,
 
-  // BT Exclusiva
-  bt_multiplexada: 40,
-  bt_convencional: 40,
+  // BT Exclusiva — NT.00005 Tabela 6.2
+  bt_multiplexada_urbano: 35,
+  bt_multiplexada_rural: 40,
+  bt_convencional_urbano: 30,
+  bt_convencional_rural: 35,
 
-  // Monofásico Rural (tipo U)
-  monofasico_rural: 150,        // CORRIGIDO: era 100
+  // Monofásico Rural tipo U — NT.00005 permite vãos estendidos
+  monofasico_rural: 150,
 
-  // Travessias (qualquer tipo)
+  // Travessias (qualquer tipo de rede)
   travessia: 40,
 } as const;
 
@@ -306,8 +317,11 @@ export const REGRAS_PROTECAO = {
 
 export const regrasEquatorialService = {
   /**
-   * Obtém o vão máximo permitido para a configuração
-   * CORRIGIDO: Agora considera tipo de área mesmo com BT conjugada
+   * Obtém o vão máximo permitido conforme NT.00005 Tabela 6.2.
+   *
+   * Considera: tipo de rede (MT/BT), tipo de área (urbana/rural),
+   * presença de BT conjugada, natureza (mono/bi/trifásica),
+   * travessias e ângulos de deflexão.
    */
   obterVaoMaximo(
     config: ConfigProjeto,
@@ -326,29 +340,27 @@ export const regrasEquatorialService = {
 
     // Monofásico rural tipo U pode ter vãos maiores
     if (config.natureza === 'MONOFASICA' && config.tipoArea === 'RURAL' && config.tipoRede === 'CONVENCIONAL') {
-      return VAOS_MAXIMOS.monofasico_rural;
+      return VAOS_MAXIMOS.monofasico_rural; // 150m
     }
 
-    // CORRIGIDO: Com BT conjugada, agora considera tipo de área
+    // Com BT conjugada, o vão é limitado pelo trecho conjugado
     if (config.comBT) {
-      return config.tipoArea === 'RURAL' 
+      return config.tipoArea === 'RURAL'
         ? VAOS_MAXIMOS.mt_bt_conjugada_rural   // 80m
-        : VAOS_MAXIMOS.mt_bt_conjugada_urbano; // 45m
+        : VAOS_MAXIMOS.mt_bt_conjugada_urbano; // 40m
     }
 
-    // MT Compacta
+    // MT Compacta (sem BT)
     if (config.tipoRede === 'COMPACTA') {
       return config.tipoArea === 'RURAL'
-        ? VAOS_MAXIMOS.mt_compacta_rural
-        : VAOS_MAXIMOS.mt_compacta_urbano;
+        ? VAOS_MAXIMOS.mt_compacta_rural       // 80m
+        : VAOS_MAXIMOS.mt_compacta_urbano;     // 40m
     }
 
-    // MT Convencional
-    if (config.tipoArea === 'RURAL') {
-      return VAOS_MAXIMOS.mt_convencional_rural;
-    }
-
-    return VAOS_MAXIMOS.mt_convencional_urbano;
+    // MT Convencional (sem BT) — valores da NT.00005
+    return config.tipoArea === 'RURAL'
+      ? VAOS_MAXIMOS.mt_convencional_rural     // 150m
+      : VAOS_MAXIMOS.mt_convencional_urbano;   // 80m
   },
 
   /**
@@ -695,6 +707,7 @@ export const regrasEquatorialService = {
       altura: number;
       resistencia: number;
       estrutura: string;
+      aterramento?: boolean;
     }>,
     condutores: Array<{
       id: string;
@@ -769,10 +782,22 @@ export const regrasEquatorialService = {
       }
     }
 
-    // Validar aterramento (verificar espaçamento)
+    // Validar aterramento (verificar espaçamento considerando postes aterrados)
+    const postesMap = new Map(postes.map(p => [p.id, p]));
     let distanciaAcumulada = 0;
-    for (const condutor of condutores) {
+    // Filtrar apenas condutores MT (evitar contar o mesmo trecho 2x com BT)
+    const condutoresMT = condutores.filter(c => c.id.startsWith('CMT'));
+    for (const condutor of condutoresMT) {
+      const posteDestino = postesMap.get(condutor.poste_destino_id);
+
       distanciaAcumulada += condutor.comprimento;
+
+      // Se o poste de destino tem aterramento, resetar o contador
+      if (posteDestino?.aterramento) {
+        distanciaAcumulada = 0;
+        continue;
+      }
+
       if (distanciaAcumulada > REGRAS_ATERRAMENTO.intervalo_maximo_bt) {
         avisos.push({
           campo: 'aterramento',

@@ -91,7 +91,7 @@ projeto-rede-eletrica/
 │   │   └── services/
 │   │       └── api.ts                     # @deprecated (não utilizado)
 │   ├── package.json
-│   └── vite.config.ts
+│   └── tsconfig.json
 └── docker-compose.yml                     # PostgreSQL
 ```
 
@@ -320,7 +320,7 @@ Exemplo: CE-12-600-015 (Circular Especial, 12m, 600daN, poste #15)
 3. **Sem visita de campo** — tudo baseado em dados geoespaciais
 4. **DXF como saída principal** — projetista abre no AutoCAD para revisão final
 5. **Equatorial primeiro** — depois expandir para outras distribuidoras
-6. **Frontend React + Vite** — Leaflet para mapa, com ErrorBoundary
+6. **Frontend React + CRA (Create React App)** — Leaflet para mapa, com ErrorBoundary
 7. **Pool PostgreSQL centralizado** — db.ts exporta pool único
 8. **Funções geo centralizadas** — utils/geo.ts com haversine, bearing, etc.
 9. **Seleção de materiais por zona de corrosão** — NT.00008 com classificação automática C2/C3/C4/C5

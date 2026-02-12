@@ -105,7 +105,8 @@ const MonitorGeracao: React.FC<MonitorGeracaoProps> = ({ osId, onComplete, onErr
   const [progressoGeral, setProgressoGeral] = useState(0);
   const [status, setStatus] = useState<'idle' | 'executando' | 'concluido' | 'erro'>('idle');
   const [tempoDecorrido, setTempoDecorrido] = useState(0);
-  const [resultado, setResultado] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_resultado, setResultado] = useState<any>(null);
   
   const logsRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -165,6 +166,7 @@ const MonitorGeracao: React.FC<MonitorGeracaoProps> = ({ osId, onComplete, onErr
     return () => {
       ws.close();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, osId]);
 
   // Adicionar log

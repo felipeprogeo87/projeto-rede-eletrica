@@ -61,6 +61,14 @@ export interface CamadasVisiveis {
   rota: boolean;
 }
 
+export interface MarcadorExtra {
+  id: string;
+  posicao: Coordenada;
+  cor: string;
+  label?: string;
+  titulo?: string;
+}
+
 interface MapaProjetoProps {
   centro: Coordenada;
   zoom?: number;
@@ -68,6 +76,7 @@ interface MapaProjetoProps {
   condutores?: CondutorGerado[];
   barreiras?: Barreira[];
   rota?: Coordenada[];
+  marcadores?: MarcadorExtra[];
   onPosteClick?: (poste: PosteGerado) => void;
   onBarreiraClick?: (barreira: Barreira) => void;
   camadas?: CamadasVisiveis;
@@ -118,6 +127,7 @@ const MapaProjeto: React.FC<MapaProjetoProps> = ({
   condutores = [],
   barreiras = [],
   rota = [],
+  marcadores = [],
   onPosteClick,
   onBarreiraClick,
   camadas = {
@@ -159,6 +169,7 @@ const MapaProjeto: React.FC<MapaProjetoProps> = ({
       markersRef.current.forEach(m => m.setMap(null));
       polylinesRef.current.forEach(p => p.setMap(null));
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiKey]);
 
   // ---------------------------------------------------------------------------
@@ -394,9 +405,9 @@ const MapaProjeto: React.FC<MapaProjetoProps> = ({
         });
 
         marker.addListener('click', () => {
-          const cor = CORES_BARREIRA[barreira.tipo] || '#6b7280';
+          const corBarreira = CORES_BARREIRA[barreira.tipo] || '#6b7280';
           const content = `
-            <div class="info-barreira ${barreira.severidade.toLowerCase()}">
+            <div class="info-barreira ${barreira.severidade.toLowerCase()}" style="border-left: 4px solid ${corBarreira}">
               <h3>${ICONES_BARREIRA[barreira.tipo]} ${barreira.tipo.replace(/_/g, ' ')}</h3>
               <p>${barreira.descricao}</p>
               <span class="severidade">${barreira.severidade}</span>
@@ -415,14 +426,46 @@ const MapaProjeto: React.FC<MapaProjetoProps> = ({
       });
     }
 
+    // ---------------------------------------------------------------------------
+    // Desenhar marcadores extras (origem/destino)
+    // ---------------------------------------------------------------------------
+
+    marcadores.forEach(marcador => {
+      const marker = new google.maps.Marker({
+        position: { lat: marcador.posicao.lat, lng: marcador.posicao.lng },
+        map: map,
+        icon: {
+          path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+          scale: 7,
+          fillColor: marcador.cor,
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+        },
+        title: marcador.titulo || marcador.label || '',
+        label: marcador.label ? {
+          text: marcador.label,
+          color: '#ffffff',
+          fontWeight: 'bold',
+          fontSize: '12px',
+        } : undefined,
+        zIndex: 5,
+      });
+      markersRef.current.push(marker);
+    });
+
     // Ajustar bounds para mostrar todos os elementos
     if (postes.length > 0) {
       const bounds = new google.maps.LatLngBounds();
       postes.forEach(p => bounds.extend({ lat: p.latitude, lng: p.longitude }));
       map.fitBounds(bounds, 50);
+    } else if (marcadores.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      marcadores.forEach(m => bounds.extend({ lat: m.posicao.lat, lng: m.posicao.lng }));
+      map.fitBounds(bounds, 80);
     }
 
-  }, [map, postes, condutores, barreiras, rota, camadas, onPosteClick, onBarreiraClick]);
+  }, [map, postes, condutores, barreiras, rota, marcadores, camadas, onPosteClick, onBarreiraClick]);
 
   // ---------------------------------------------------------------------------
   // Render

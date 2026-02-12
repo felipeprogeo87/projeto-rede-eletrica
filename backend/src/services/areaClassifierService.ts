@@ -71,37 +71,45 @@ export interface RegrasCompletas {
 // Constantes - Regras NT EQTL
 // -----------------------------------------------------------------------------
 
+/**
+ * Regras de vãos por tipo de área e tipo de rede.
+ * Fonte: NT.00005.EQTL Tabela 6.2 — Vãos máximos
+ *
+ * IMPORTANTE: Para rede conjugada (MT+BT), o vão efetivo é decidido no
+ * regrasEquatorialService.obterVaoMaximo(), que é a fonte única de verdade.
+ * Esta tabela define os limites por tipo de rede INDIVIDUAL.
+ */
 const REGRAS_POR_AREA: Record<TipoArea, RegrasCompletas> = {
   URBANA: {
     tipoArea: 'URBANA',
     redesMT: {
       convencional: {
-        vaoMinimo: 35,
-        vaoMaximo: 80,
+        vaoMinimo: 30,
+        vaoMaximo: 80,       // NT.00005: 80m
         vaoIdeal: 50,
         alturaMinimaMT: 6.0,
         alturaMinimaBT: 5.5,
       },
       compacta: {
-        vaoMinimo: 30,
-        vaoMaximo: 60,
-        vaoIdeal: 45,
+        vaoMinimo: 25,
+        vaoMaximo: 40,       // NT.00005: 40m
+        vaoIdeal: 35,
         alturaMinimaMT: 5.5,
         alturaMinimaBT: 5.0,
       },
     },
     redesBT: {
       multiplexada: {
-        vaoMinimo: 25,
-        vaoMaximo: 45,
-        vaoIdeal: 35,
+        vaoMinimo: 20,
+        vaoMaximo: 35,       // NT.00005: 35m
+        vaoIdeal: 30,
         alturaMinimaMT: 0,
         alturaMinimaBT: 5.5,
       },
       convencional: {
-        vaoMinimo: 25,
-        vaoMaximo: 40,
-        vaoIdeal: 35,
+        vaoMinimo: 20,
+        vaoMaximo: 30,       // NT.00005: 30m
+        vaoIdeal: 25,
         alturaMinimaMT: 0,
         alturaMinimaBT: 6.0,
       },
@@ -111,32 +119,32 @@ const REGRAS_POR_AREA: Record<TipoArea, RegrasCompletas> = {
     tipoArea: 'RURAL',
     redesMT: {
       convencional: {
-        vaoMinimo: 60,
-        vaoMaximo: 120,
-        vaoIdeal: 90,
+        vaoMinimo: 40,
+        vaoMaximo: 150,      // NT.00005: 150m
+        vaoIdeal: 100,
         alturaMinimaMT: 6.0,
         alturaMinimaBT: 5.5,
       },
       compacta: {
-        vaoMinimo: 50,
-        vaoMaximo: 100,
-        vaoIdeal: 80,
+        vaoMinimo: 35,
+        vaoMaximo: 80,       // NT.00005: 80m
+        vaoIdeal: 60,
         alturaMinimaMT: 5.5,
         alturaMinimaBT: 5.0,
       },
     },
     redesBT: {
       multiplexada: {
-        vaoMinimo: 35,
-        vaoMaximo: 80,
-        vaoIdeal: 60,
+        vaoMinimo: 25,
+        vaoMaximo: 40,       // NT.00005: 40m
+        vaoIdeal: 35,
         alturaMinimaMT: 0,
         alturaMinimaBT: 5.5,
       },
       convencional: {
-        vaoMinimo: 40,
-        vaoMaximo: 80,
-        vaoIdeal: 60,
+        vaoMinimo: 25,
+        vaoMaximo: 35,       // NT.00005: 35m
+        vaoIdeal: 30,
         alturaMinimaMT: 0,
         alturaMinimaBT: 6.0,
       },
@@ -197,7 +205,8 @@ export const areaClassifierService = {
     origem: Coordenada,
     destino: Coordenada,
     dadosTerreno: DadosTerreno,
-    usarGoogleMaps: boolean = true
+    usarGoogleMaps: boolean = true,
+    analiseAreaGooglePrevia?: AnaliseArea | null
   ): Promise<ClassificacaoArea> {
     console.log('[CLASSIFICAÇÃO] Analisando tipo de área...');
 
@@ -205,21 +214,30 @@ export const areaClassifierService = {
     const classificacaoOSM = this.classificarPorOSM(dadosTerreno);
     console.log(`[CLASSIFICAÇÃO] OSM: ${classificacaoOSM.tipo} (confiança: ${(classificacaoOSM.confianca * 100).toFixed(0)}%)`);
 
-    // 2. Análise baseada no Google Maps (se habilitado)
-    let classificacaoGoogle: AnaliseArea | null = null;
-    if (usarGoogleMaps) {
+    // 2. Análise baseada no Google Maps
+    //    Se já temos resultado prévio (da Etapa 3), reutilizar para evitar chamadas duplas
+    let classificacaoGoogle: AnaliseArea | null = analiseAreaGooglePrevia ?? null;
+    if (!classificacaoGoogle && usarGoogleMaps) {
       try {
         const resultadoGoogle = await googleMapsService.analisarRota(origem, destino);
         classificacaoGoogle = resultadoGoogle.analiseArea;
-        console.log(`[CLASSIFICAÇÃO] Google: ${classificacaoGoogle.tipo} (confiança: ${(classificacaoGoogle.confianca * 100).toFixed(0)}%)`);
       } catch (error: any) {
         console.warn(`[CLASSIFICAÇÃO] Erro no Google Maps: ${error.message}`);
       }
     }
 
+    // Ignorar resultado Google se confiança = 0 (APIs não responderam)
+    const googleValido = classificacaoGoogle && classificacaoGoogle.confianca > 0 ? classificacaoGoogle : null;
+
+    if (googleValido) {
+      console.log(`[CLASSIFICAÇÃO] Google: ${googleValido.tipo} (confiança: ${(googleValido.confianca * 100).toFixed(0)}%)`);
+    } else {
+      console.log('[CLASSIFICAÇÃO] Google: sem dados disponíveis');
+    }
+
     // 3. Combinar resultados
-    const classificacaoFinal = this.combinarClassificacoes(classificacaoOSM, classificacaoGoogle);
-    
+    const classificacaoFinal = this.combinarClassificacoes(classificacaoOSM, googleValido);
+
     console.log(`[CLASSIFICAÇÃO] Final: ${classificacaoFinal.tipo} (confiança: ${(classificacaoFinal.confianca * 100).toFixed(0)}%)`);
     console.log(`[CLASSIFICAÇÃO] Métricas: ${classificacaoFinal.metricas.densidadeEdificacoes.toFixed(1)} edif/km², ${classificacaoFinal.metricas.densidadeRuas.toFixed(1)} km ruas/km²`);
 

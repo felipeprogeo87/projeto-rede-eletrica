@@ -22,12 +22,74 @@ router.post('/:id/gerar-projeto', async (req: Request, res: Response) => {
 
   try {
     const resultado = await geracaoService.gerarProjeto(osId, config);
-    
+
     if (resultado.sucesso) {
       await geracaoService.salvarProjeto(osId, resultado.postes, resultado.condutores);
     }
 
-    res.json(resultado);
+    // =========================================================================
+    // Transformar resposta para formato esperado pelo frontend
+    // =========================================================================
+
+    // 1. Barreiras: converter coordenada:{lat,lng} → latitude/longitude separados
+    //    e mapear tipos internos para tipos do frontend
+    const MAPA_TIPO_BARREIRA_FRONTEND: Record<string, string> = {
+      'TRAVESSIA_HIDRICA': 'TRAVESSIA_HIDRICA',
+      'TRAVESSIA_FERROVIARIA': 'TRAVESSIA_FERROVIARIA',
+      'TRAVESSIA_RODOVIARIA': 'TRAVESSIA_RODOVIARIA',
+      'TRAVESSIA_LT': 'LT_CRUZAMENTO',
+      'PODA_FAIXA': 'VEGETACAO',
+      'PODA_ARVORE': 'VEGETACAO',
+      'DECLIVE_ACENTUADO': 'AREA_ALAGAVEL', // mais próximo visualmente
+    };
+
+    const barreirasFormatadas = resultado.barreiras.barreiras.map((b: any, idx: number) => ({
+      id: b.id || `BAR_${idx + 1}`,
+      tipo: MAPA_TIPO_BARREIRA_FRONTEND[b.tipo] || 'VEGETACAO',
+      latitude: b.coordenada?.lat ?? 0,
+      longitude: b.coordenada?.lng ?? 0,
+      descricao: b.descricao || b.nome || 'Barreira detectada',
+      severidade: b.severidade === 'CRITICO' ? 'CRITICA' : b.severidade,
+    }));
+
+    // 2. validacao_detalhes: converter objetos → strings
+    const validacaoFormatada = resultado.validacao_detalhes
+      ? {
+          erros: resultado.validacao_detalhes.erros.map((e: any) =>
+            typeof e === 'string' ? e : e.mensagem || `${e.categoria}: ${e.detalhe}`
+          ),
+          avisos: resultado.validacao_detalhes.avisos.map((a: any) =>
+            typeof a === 'string' ? a : a.mensagem || `${a.categoria}: ${a.detalhe}`
+          ),
+        }
+      : { erros: [], avisos: [] };
+
+    // 3. resumo.metodo: mapear 'osrm' → 'osm' (frontend só aceita 'osm' | 'linha_reta')
+    const metodoFrontend = resultado.resumo.metodo === 'osrm' ? 'osm' : resultado.resumo.metodo;
+
+    // Montar resposta no formato do frontend
+    const respostaFrontend = {
+      sucesso: resultado.sucesso,
+      postes: resultado.postes,
+      condutores: resultado.condutores,
+      barreiras: {
+        barreiras: barreirasFormatadas,
+        resumo: {
+          total: resultado.barreiras.resumo.total,
+          criticas: resultado.barreiras.resumo.criticas,
+          avisos: resultado.barreiras.resumo.avisos,
+        },
+      },
+      materiais: resultado.materiais,
+      perfil: resultado.perfil,
+      resumo: {
+        ...resultado.resumo,
+        metodo: metodoFrontend,
+      },
+      validacao_detalhes: validacaoFormatada,
+    };
+
+    res.json(respostaFrontend);
   } catch (error: any) {
     console.error(`[GERACAO] Erro:`, error.message);
     res.status(500).json({ error: error.message });

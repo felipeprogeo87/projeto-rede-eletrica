@@ -11,10 +11,10 @@
 // - Densidade de construções (para classificar urbano/rural)
 //
 // APIs utilizadas:
-// - Static Maps API (imagem satelital para análise de cor)
-// - Places API (parques, pontes, estações)
-// - Roads API (rodovias, classificação de vias)
-// - Elevation API (detectar pontes/viadutos por variação brusca)
+// - Places API (New) — parques, pontes, estações (POST + header key)
+// - Roads API — rodovias, classificação de vias
+// - Elevation API — detectar pontes/viadutos por variação brusca
+// - Geocoding API — classificação de endereço para área urbana/rural
 //
 // =============================================================================
 
@@ -29,10 +29,9 @@ import { Coordenada } from './osmService';
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 
 // URLs das APIs
-const PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
+const PLACES_NEW_API_URL = 'https://places.googleapis.com/v1/places:searchNearby';
 const ROADS_API_URL = 'https://roads.googleapis.com/v1/snapToRoads';
 const ELEVATION_API_URL = 'https://maps.googleapis.com/maps/api/elevation/json';
-const STATIC_MAPS_URL = 'https://maps.googleapis.com/maps/api/staticmap';
 const GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
 
 // -----------------------------------------------------------------------------
@@ -177,7 +176,7 @@ export const googleMapsService = {
 
     } catch (error: any) {
       console.error(`[GOOGLE MAPS] Erro: ${error.message}`);
-      
+
       // Retornar resultado vazio em caso de erro
       return {
         barreiras: [],
@@ -201,60 +200,67 @@ export const googleMapsService = {
   },
 
   /**
-   * Busca barreiras usando Places API (parques, rios, ferrovias, etc)
+   * Busca barreiras usando Places API (New) — parques, rios, ferrovias, etc.
+   * Usa POST + header X-Goog-Api-Key (formato da API nova)
    */
   async buscarBarreirasPlaces(origem: Coordenada, destino: Coordenada): Promise<BarreiraGoogleMaps[]> {
-    console.log('[GOOGLE MAPS] Buscando lugares relevantes...');
-    
+    console.log('[GOOGLE MAPS] Buscando lugares relevantes (Places API New)...');
+
     const { centro, raio } = calcularAreaBusca(origem, destino);
     const barreiras: BarreiraGoogleMaps[] = [];
 
     // Tipos de lugares que são barreiras potenciais
     const tiposBusca = [
-      { type: 'park', tipoBarreira: 'AREA_VERDE' as const, descricao: 'Parque/Área verde' },
-      { type: 'train_station', tipoBarreira: 'FERROVIA' as const, descricao: 'Estação ferroviária (ferrovia próxima)' },
-      { type: 'subway_station', tipoBarreira: 'FERROVIA' as const, descricao: 'Estação de metrô (ferrovia próxima)' },
-      { type: 'bridge', tipoBarreira: 'PONTE' as const, descricao: 'Ponte/Viaduto' },
+      { types: ['park'], tipoBarreira: 'AREA_VERDE' as const, descricao: 'Parque/Área verde' },
+      { types: ['train_station', 'subway_station', 'light_rail_station', 'transit_station'], tipoBarreira: 'FERROVIA' as const, descricao: 'Estação ferroviária (ferrovia próxima)' },
     ];
 
     for (const busca of tiposBusca) {
       try {
-        const response = await axios.get(PLACES_API_URL, {
-          params: {
-            location: `${centro.lat},${centro.lng}`,
-            radius: raio,
-            type: busca.type,
-            key: GOOGLE_MAPS_API_KEY,
+        const response = await axios.post(PLACES_NEW_API_URL, {
+          includedTypes: busca.types,
+          maxResultCount: 10,
+          locationRestriction: {
+            circle: {
+              center: { latitude: centro.lat, longitude: centro.lng },
+              radius: raio,
+            },
+          },
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': GOOGLE_MAPS_API_KEY,
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.location,places.types',
           },
           timeout: 10000,
         });
 
-        if (response.data.status === 'OK' && response.data.results) {
-          for (const place of response.data.results) {
-            const loc = place.geometry?.location;
-            if (!loc) continue;
+        const places = response.data.places || [];
+        for (const place of places) {
+          const loc = place.location;
+          if (!loc) continue;
 
-            // Verificar se está próximo da rota
-            const pontoPlace: Coordenada = { lat: loc.lat, lng: loc.lng };
-            const distOrigem = calcularDistancia(pontoPlace, origem);
-            const distDestino = calcularDistancia(pontoPlace, destino);
-            const distRota = Math.min(distOrigem, distDestino);
+          const pontoPlace: Coordenada = { lat: loc.latitude, lng: loc.longitude };
+          const distOrigem = calcularDistancia(pontoPlace, origem);
+          const distDestino = calcularDistancia(pontoPlace, destino);
+          const distRota = Math.min(distOrigem, distDestino);
 
-            if (distRota <= raio) {
-              barreiras.push({
-                id: `gm_place_${place.place_id}`,
-                tipo: busca.tipoBarreira,
-                nome: place.name,
-                localizacao: pontoPlace,
-                descricao: `${busca.descricao}: ${place.name}`,
-                fonte: 'google_places',
-                confianca: 0.8,
-              });
-            }
+          if (distRota <= raio) {
+            const nome = place.displayName?.text || 'Sem nome';
+            barreiras.push({
+              id: `gm_place_${place.id}`,
+              tipo: busca.tipoBarreira,
+              nome,
+              localizacao: pontoPlace,
+              descricao: `${busca.descricao}: ${nome}`,
+              fonte: 'google_places',
+              confianca: 0.8,
+            });
           }
         }
       } catch (error: any) {
-        console.warn(`[GOOGLE MAPS] Erro ao buscar ${busca.type}: ${error.message}`);
+        const errMsg = error.response?.data?.error?.message || error.message;
+        console.warn(`[GOOGLE MAPS] Places API (New) erro para ${busca.types.join(',')}: ${errMsg}`);
       }
     }
 
@@ -267,7 +273,7 @@ export const googleMapsService = {
    */
   async buscarRodovias(origem: Coordenada, destino: Coordenada): Promise<BarreiraGoogleMaps[]> {
     console.log('[GOOGLE MAPS] Analisando rodovias...');
-    
+
     const barreiras: BarreiraGoogleMaps[] = [];
     const pontos = gerarPontosAnalise(origem, destino, 100);
 
@@ -304,7 +310,7 @@ export const googleMapsService = {
    */
   async detectarPontes(origem: Coordenada, destino: Coordenada): Promise<BarreiraGoogleMaps[]> {
     console.log('[GOOGLE MAPS] Detectando pontes/viadutos...');
-    
+
     const barreiras: BarreiraGoogleMaps[] = [];
     const pontos = gerarPontosAnalise(origem, destino, 20); // Intervalo menor para detectar variações
 
@@ -320,19 +326,24 @@ export const googleMapsService = {
         timeout: 15000,
       });
 
+      if (response.data.status === 'REQUEST_DENIED') {
+        console.warn(`[GOOGLE MAPS] Elevation API REQUEST_DENIED: ${response.data.error_message || 'API não ativada'}`);
+        return barreiras;
+      }
+
       if (response.data.status === 'OK' && response.data.results) {
         const elevacoes = response.data.results.map((r: any) => r.elevation);
-        
+
         // Detectar variações bruscas (possíveis pontes/viadutos)
         for (let i = 1; i < elevacoes.length - 1; i++) {
           const elevAnterior = elevacoes[i - 1];
           const elevAtual = elevacoes[i];
           const elevProxima = elevacoes[i + 1];
-          
+
           // Se o ponto atual está significativamente mais alto que os vizinhos = ponte
           const diferencaAnterior = elevAtual - elevAnterior;
           const diferencaProxima = elevAtual - elevProxima;
-          
+
           // Ponte: elevação sobe e depois desce bruscamente (>3m)
           if (diferencaAnterior > 3 && diferencaProxima > 3) {
             barreiras.push({
@@ -358,52 +369,51 @@ export const googleMapsService = {
 
   /**
    * Analisa e classifica o tipo de área (URBANA, RURAL, MISTA)
+   * Usa Places API (New) para buscar estabelecimentos + Geocoding para endereço
    */
   async analisarTipoArea(origem: Coordenada, destino: Coordenada): Promise<AnaliseArea> {
     console.log('[GOOGLE MAPS] Classificando tipo de área...');
-    
+
     const { centro, raio } = calcularAreaBusca(origem, destino);
-    
+
     let temComercio = false;
     let temIndustria = false;
     let temResidencial = false;
     let temAgricola = false;
     let totalLugares = 0;
 
-    // Buscar diferentes tipos de estabelecimentos para classificar a área
-    const tiposUrbanos = [
-      'store', 'restaurant', 'bank', 'hospital', 'school', 
-      'shopping_mall', 'supermarket', 'pharmacy'
-    ];
-    
-    const tiposIndustriais = ['factory', 'industrial'];
-    const tiposResidenciais = ['residential', 'apartment'];
-
     try {
-      // Buscar estabelecimentos comerciais (indicador de área urbana)
-      for (const tipo of tiposUrbanos.slice(0, 3)) { // Limitar para não exceder quota
-        try {
-          const response = await axios.get(PLACES_API_URL, {
-            params: {
-              location: `${centro.lat},${centro.lng}`,
+      // 1. Buscar estabelecimentos comerciais via Places API (New)
+      //    Busca tipos urbanos em uma única chamada (mais eficiente)
+      try {
+        const response = await axios.post(PLACES_NEW_API_URL, {
+          includedTypes: ['store', 'restaurant', 'bank', 'hospital', 'school', 'supermarket', 'pharmacy'],
+          maxResultCount: 20,
+          locationRestriction: {
+            circle: {
+              center: { latitude: centro.lat, longitude: centro.lng },
               radius: Math.min(raio, 2000),
-              type: tipo,
-              key: GOOGLE_MAPS_API_KEY,
             },
-            timeout: 5000,
-          });
+          },
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': GOOGLE_MAPS_API_KEY,
+            'X-Goog-FieldMask': 'places.types',
+          },
+          timeout: 8000,
+        });
 
-          if (response.data.status === 'OK') {
-            const count = response.data.results?.length || 0;
-            totalLugares += count;
-            if (count > 0) temComercio = true;
-          }
-        } catch (e) {
-          // Ignorar erros individuais
-        }
+        const places = response.data.places || [];
+        totalLugares = places.length;
+        if (totalLugares > 0) temComercio = true;
+        console.log(`[GOOGLE MAPS] Places (area): ${totalLugares} estabelecimentos encontrados`);
+      } catch (error: any) {
+        const errMsg = error.response?.data?.error?.message || error.message;
+        console.warn(`[GOOGLE MAPS] Places API (area): ${errMsg}`);
       }
 
-      // Usar Geocoding para obter informações do endereço
+      // 2. Usar Geocoding para obter informações do endereço
       const geocodeResponse = await axios.get(GEOCODING_API_URL, {
         params: {
           latlng: `${centro.lat},${centro.lng}`,
@@ -412,17 +422,16 @@ export const googleMapsService = {
         timeout: 5000,
       });
 
-      if (geocodeResponse.data.status === 'OK' && geocodeResponse.data.results?.length > 0) {
+      if (geocodeResponse.data.status === 'REQUEST_DENIED') {
+        console.warn(`[GOOGLE MAPS] Geocoding API REQUEST_DENIED: ${geocodeResponse.data.error_message || 'API não ativada'}`);
+      } else if (geocodeResponse.data.status === 'OK' && geocodeResponse.data.results?.length > 0) {
         const addressComponents = geocodeResponse.data.results[0].address_components || [];
-        
+
         for (const component of addressComponents) {
           const types = component.types || [];
           if (types.includes('locality') || types.includes('sublocality')) {
             // Está em uma cidade/bairro = mais provável urbano
             temResidencial = true;
-          }
-          if (types.includes('administrative_area_level_2')) {
-            // Tem município definido
           }
         }
 
@@ -431,6 +440,9 @@ export const googleMapsService = {
         if (resultTypes.includes('route') || resultTypes.includes('street_address')) {
           temResidencial = true;
         }
+
+        const addr = geocodeResponse.data.results[0].formatted_address || '';
+        console.log(`[GOOGLE MAPS] Geocoding: ${addr}`);
       }
 
     } catch (error: any) {
@@ -441,7 +453,21 @@ export const googleMapsService = {
     const areaKm2 = Math.PI * Math.pow(raio / 1000, 2);
     const densidadeConstrucoes = totalLugares / areaKm2;
 
-    // Lógica de classificação
+    // Se nenhuma API respondeu (totalLugares=0 e nenhum indicador),
+    // retornar MISTA com confiança 0 para não influenciar a classificação
+    if (totalLugares === 0 && !temComercio && !temIndustria && !temResidencial && !temAgricola) {
+      console.log('[GOOGLE MAPS] Nenhuma API retornou dados válidos — confiança 0');
+      return {
+        tipo: 'MISTA' as const,
+        confianca: 0,
+        densidadeConstrucoes: 0,
+        densidadeVias: 0,
+        percentualVegetacao: 0,
+        indicadores: { temComercio, temIndustria, temResidencial, temAgricola },
+      };
+    }
+
+    // Lógica de classificação (com dados válidos das APIs)
     let tipo: 'URBANA' | 'RURAL' | 'MISTA';
     let confianca: number;
 
@@ -456,14 +482,14 @@ export const googleMapsService = {
       confianca = 0.5;
     }
 
-    console.log(`[GOOGLE MAPS] Classificação: ${tipo} (densidade: ${densidadeConstrucoes.toFixed(1)}/km²)`);
+    console.log(`[GOOGLE MAPS] Classificação: ${tipo} (densidade: ${densidadeConstrucoes.toFixed(1)}/km², comércio=${temComercio}, residencial=${temResidencial})`);
 
     return {
       tipo,
       confianca,
       densidadeConstrucoes,
-      densidadeVias: 0, // Seria necessário calcular com mais dados
-      percentualVegetacao: 0, // Seria necessário análise de imagem
+      densidadeVias: 0,
+      percentualVegetacao: 0,
       indicadores: {
         temComercio,
         temIndustria,
@@ -495,11 +521,14 @@ export const googleMapsService = {
       });
 
       if (!duplicata) {
-        // Converter para formato do barreirasService
+        // Converter para formato do barreirasService (com campos obrigatórios)
         barreirasCombinadas.push({
+          id: bg.id || `GM_${barreirasCombinadas.length + 1}`,
           tipo: this.mapearTipoBarreira(bg.tipo),
           descricao: bg.descricao,
           coordenada: bg.localizacao,
+          poste_antes_id: '',
+          poste_depois_id: '',
           nome: bg.nome,
           impacto: {
             observacao: `Detectado via Google Maps (confiança: ${(bg.confianca * 100).toFixed(0)}%)`,
