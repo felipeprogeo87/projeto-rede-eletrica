@@ -521,11 +521,14 @@ export const googleMapsService = {
       });
 
       if (!duplicata) {
-        // Converter para formato do barreirasService
+        // Converter para formato do barreirasService (com campos obrigatórios)
         barreirasCombinadas.push({
+          id: bg.id || `GM_${barreirasCombinadas.length + 1}`,
           tipo: this.mapearTipoBarreira(bg.tipo),
           descricao: bg.descricao,
           coordenada: bg.localizacao,
+          poste_antes_id: '',
+          poste_depois_id: '',
           nome: bg.nome,
           impacto: {
             observacao: `Detectado via Google Maps (confiança: ${(bg.confianca * 100).toFixed(0)}%)`,
