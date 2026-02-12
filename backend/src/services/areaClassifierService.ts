@@ -205,7 +205,8 @@ export const areaClassifierService = {
     origem: Coordenada,
     destino: Coordenada,
     dadosTerreno: DadosTerreno,
-    usarGoogleMaps: boolean = true
+    usarGoogleMaps: boolean = true,
+    analiseAreaGooglePrevia?: AnaliseArea | null
   ): Promise<ClassificacaoArea> {
     console.log('[CLASSIFICAÇÃO] Analisando tipo de área...');
 
@@ -213,21 +214,30 @@ export const areaClassifierService = {
     const classificacaoOSM = this.classificarPorOSM(dadosTerreno);
     console.log(`[CLASSIFICAÇÃO] OSM: ${classificacaoOSM.tipo} (confiança: ${(classificacaoOSM.confianca * 100).toFixed(0)}%)`);
 
-    // 2. Análise baseada no Google Maps (se habilitado)
-    let classificacaoGoogle: AnaliseArea | null = null;
-    if (usarGoogleMaps) {
+    // 2. Análise baseada no Google Maps
+    //    Se já temos resultado prévio (da Etapa 3), reutilizar para evitar chamadas duplas
+    let classificacaoGoogle: AnaliseArea | null = analiseAreaGooglePrevia ?? null;
+    if (!classificacaoGoogle && usarGoogleMaps) {
       try {
         const resultadoGoogle = await googleMapsService.analisarRota(origem, destino);
         classificacaoGoogle = resultadoGoogle.analiseArea;
-        console.log(`[CLASSIFICAÇÃO] Google: ${classificacaoGoogle.tipo} (confiança: ${(classificacaoGoogle.confianca * 100).toFixed(0)}%)`);
       } catch (error: any) {
         console.warn(`[CLASSIFICAÇÃO] Erro no Google Maps: ${error.message}`);
       }
     }
 
+    // Ignorar resultado Google se confiança = 0 (APIs não responderam)
+    const googleValido = classificacaoGoogle && classificacaoGoogle.confianca > 0 ? classificacaoGoogle : null;
+
+    if (googleValido) {
+      console.log(`[CLASSIFICAÇÃO] Google: ${googleValido.tipo} (confiança: ${(googleValido.confianca * 100).toFixed(0)}%)`);
+    } else {
+      console.log('[CLASSIFICAÇÃO] Google: sem dados disponíveis');
+    }
+
     // 3. Combinar resultados
-    const classificacaoFinal = this.combinarClassificacoes(classificacaoOSM, classificacaoGoogle);
-    
+    const classificacaoFinal = this.combinarClassificacoes(classificacaoOSM, googleValido);
+
     console.log(`[CLASSIFICAÇÃO] Final: ${classificacaoFinal.tipo} (confiança: ${(classificacaoFinal.confianca * 100).toFixed(0)}%)`);
     console.log(`[CLASSIFICAÇÃO] Métricas: ${classificacaoFinal.metricas.densidadeEdificacoes.toFixed(1)} edif/km², ${classificacaoFinal.metricas.densidadeRuas.toFixed(1)} km ruas/km²`);
 

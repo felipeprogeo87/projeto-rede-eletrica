@@ -229,6 +229,11 @@ export const googleMapsService = {
           timeout: 10000,
         });
 
+        if (response.data.status === 'REQUEST_DENIED') {
+          console.warn(`[GOOGLE MAPS] Places API REQUEST_DENIED para ${busca.type}: ${response.data.error_message || 'API não ativada'}`);
+          break; // Não tentar outros tipos se a API não está ativada
+        }
+
         if (response.data.status === 'OK' && response.data.results) {
           for (const place of response.data.results) {
             const loc = place.geometry?.location;
@@ -320,9 +325,14 @@ export const googleMapsService = {
         timeout: 15000,
       });
 
+      if (response.data.status === 'REQUEST_DENIED') {
+        console.warn(`[GOOGLE MAPS] Elevation API REQUEST_DENIED: ${response.data.error_message || 'API não ativada'}`);
+        return barreiras;
+      }
+
       if (response.data.status === 'OK' && response.data.results) {
         const elevacoes = response.data.results.map((r: any) => r.elevation);
-        
+
         // Detectar variações bruscas (possíveis pontes/viadutos)
         for (let i = 1; i < elevacoes.length - 1; i++) {
           const elevAnterior = elevacoes[i - 1];
@@ -393,6 +403,10 @@ export const googleMapsService = {
             timeout: 5000,
           });
 
+          if (response.data.status === 'REQUEST_DENIED') {
+            console.warn(`[GOOGLE MAPS] Places API (area) REQUEST_DENIED: ${response.data.error_message || 'API não ativada'}`);
+            break; // Não tentar outros tipos
+          }
           if (response.data.status === 'OK') {
             const count = response.data.results?.length || 0;
             totalLugares += count;
@@ -412,7 +426,9 @@ export const googleMapsService = {
         timeout: 5000,
       });
 
-      if (geocodeResponse.data.status === 'OK' && geocodeResponse.data.results?.length > 0) {
+      if (geocodeResponse.data.status === 'REQUEST_DENIED') {
+        console.warn(`[GOOGLE MAPS] Geocoding API REQUEST_DENIED: ${geocodeResponse.data.error_message || 'API não ativada'}`);
+      } else if (geocodeResponse.data.status === 'OK' && geocodeResponse.data.results?.length > 0) {
         const addressComponents = geocodeResponse.data.results[0].address_components || [];
         
         for (const component of addressComponents) {
@@ -441,7 +457,21 @@ export const googleMapsService = {
     const areaKm2 = Math.PI * Math.pow(raio / 1000, 2);
     const densidadeConstrucoes = totalLugares / areaKm2;
 
-    // Lógica de classificação
+    // Se nenhuma API respondeu (totalLugares=0 e nenhum indicador),
+    // retornar MISTA com confiança 0 para não influenciar a classificação
+    if (totalLugares === 0 && !temComercio && !temIndustria && !temResidencial && !temAgricola) {
+      console.log('[GOOGLE MAPS] Nenhuma API retornou dados válidos — confiança 0');
+      return {
+        tipo: 'MISTA' as const,
+        confianca: 0,
+        densidadeConstrucoes: 0,
+        densidadeVias: 0,
+        percentualVegetacao: 0,
+        indicadores: { temComercio, temIndustria, temResidencial, temAgricola },
+      };
+    }
+
+    // Lógica de classificação (com dados válidos das APIs)
     let tipo: 'URBANA' | 'RURAL' | 'MISTA';
     let confianca: number;
 

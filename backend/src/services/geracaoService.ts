@@ -236,21 +236,23 @@ export const geracaoService = {
       // ETAPA 3: Consultar Google Maps
       // =====================================================================
       let barreirasGoogle: any[] = [];
+      let analiseAreaGoogle: import('./googleMapsService').AnaliseArea | null = null;
       const usarGoogleMaps = config?.usar_google_maps !== false;
-      
+
       if (usarGoogleMaps) {
         ws.etapaInicio(osId, 'google', 'Consultando Google Maps');
-        
+
         try {
           ws.consultaAPI(osId, 'Google Places API', 'maps.googleapis.com/places', 'executando');
           ws.consultaAPI(osId, 'Google Elevation API', 'maps.googleapis.com/elevation', 'executando');
-          
+
           const { resultado: resultadoGoogle, tempoMs: tempoGoogle } = await medirTempo(async () => {
             return await googleMapsService.analisarRota(origem, destino);
           });
-          
+
           barreirasGoogle = resultadoGoogle.barreiras;
-          
+          analiseAreaGoogle = resultadoGoogle.analiseArea;
+
           ws.consultaAPI(osId, 'Google Places API', 'maps.googleapis.com/places', 'sucesso', tempoGoogle);
           ws.consultaAPI(osId, 'Google Elevation API', 'maps.googleapis.com/elevation', 'sucesso', tempoGoogle);
           ws.etapaProgresso(osId, 'google', 100, `${barreirasGoogle.length} barreiras detectadas`);
@@ -339,7 +341,7 @@ export const geracaoService = {
         ws.log(osId, 'info', 'classificacao', `Tipo de área FORÇADO: ${tipoArea}`);
       } else {
         const { resultado: classif, tempoMs: tempoClassif } = await medirTempo(async () => {
-          return await areaClassifierService.classificarArea(origem, destino, dadosTerreno, false);
+          return await areaClassifierService.classificarArea(origem, destino, dadosTerreno, usarGoogleMaps, analiseAreaGoogle);
         });
         classificacaoArea = classif;
         tipoArea = classif.tipo;
